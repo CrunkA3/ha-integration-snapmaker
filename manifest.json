@@ -1,0 +1,11 @@
+{
+    "domain": "snapmaker",
+    "name": "Snapmaker",
+    "codeowners": ["@crunka3"],
+    "config_flow": true,
+    "dependencies": [],
+    "documentation": "https://github.com/home-assistant/example-custom-config/tree/master/custom_components/example_light/",
+    "integration_type": "device",
+    "iot_class": "local_polling",
+    "version": "0.1.0"
+}
