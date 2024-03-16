@@ -192,7 +192,7 @@ class ElapsedTimeSensor(CoordinatorEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_icon = "mdi:timer-sand"
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = "s"
+    _attr_native_unit_of_measurement = "min"
     _attr_suggested_display_precision = 0
     _attr_suggested_unit_of_measurement = "min"
 
@@ -216,7 +216,10 @@ class ElapsedTimeSensor(CoordinatorEntity, SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         _LOGGER.debug("snapmaker ElapsedTimeSensor state")
-        return self.coordinator.data["elapsedTime"]
+        if self.coordinator.data["elapsed Time"] == 0:
+            return 0
+            
+        return self.coordinator.data["elapsedTime"] / 60
 
 
     @callback
