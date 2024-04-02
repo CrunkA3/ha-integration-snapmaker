@@ -216,7 +216,7 @@ class ElapsedTimeSensor(CoordinatorEntity, SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         _LOGGER.debug("snapmaker ElapsedTimeSensor state")
-        if self.coordinator.data["elapsed Time"] == 0:
+        if self.coordinator.data["elapsedTime"] == 0:
             return 0
             
         return self.coordinator.data["elapsedTime"] / 60
