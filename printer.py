@@ -37,8 +37,6 @@ class Printer:
         return self._name
 
     @property
-    def online(self) -> float:
+    def online(self) -> bool:
         """Printer is online."""
-        # The dummy roller is offline about 10% of the time. Returns True if online,
-        # False if offline.
         return self._state != "OFFLINE"
