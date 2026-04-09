@@ -2,6 +2,7 @@
 
 [![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz)
 [![GitHub release](https://img.shields.io/github/v/release/CrunkA3/ha-integration-snapmaker)](https://github.com/CrunkA3/ha-integration-snapmaker/releases)
+[![Validate](https://github.com/CrunkA3/ha-integration-snapmaker/actions/workflows/validate.yml/badge.svg)](https://github.com/CrunkA3/ha-integration-snapmaker/actions/workflows/validate.yml)
 
 A [Home Assistant](https://www.home-assistant.io/) custom integration for monitoring [Snapmaker](https://snapmaker.com/) 3D printers.
 
