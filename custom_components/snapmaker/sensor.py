@@ -43,8 +43,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         NozzleTargetTemperature2Sensor(coordinator, printer),
         NozzleTemperature1Sensor(coordinator, printer),
         NozzleTemperature2Sensor(coordinator, printer),
-        FilamentOutSensor(coordinator, printer),
-        HomedSensor(coordinator, printer),
         HeatedBedTargetTemperatureSensor(coordinator, printer),
         HeatedBedTemperatureSensor(coordinator, printer),
         FileNameSensor(coordinator, printer),
@@ -476,84 +474,6 @@ class NozzleTemperature2Sensor(CoordinatorEntity, SensorEntity):
 
     async def async_update(self):
         _LOGGER.debug("snapmaker NozzleTemperature2Sensor async_update")
-        await self.coordinator.async_request_refresh()
-
-
-class FilamentOutSensor(CoordinatorEntity, SensorEntity):
-    """Filament out status of a Snapmaker printer."""
-    _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = ["true", "false"]
-    _attr_icon = "mdi:printer-3d-nozzle-alert"
-
-    def __init__(self, coordinator, printer):
-        super().__init__(coordinator, context=1)
-        self._printer = printer
-
-        self._attr_unique_id = f"{self._printer.device_id}_filament_out"
-        self._attr_name = f"{self._printer.name} Filament Out"
-
-    @property
-    def device_info(self):
-        return self.coordinator.device_info
-
-    @property
-    def available(self) -> bool:
-        return True
-
-    @property
-    def state(self):
-        _LOGGER.debug("snapmaker FilamentOutSensor state")
-        value = self.coordinator.data["isFilamentOut"]
-        if value is None:
-            return None
-        return "true" if value else "false"
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        _LOGGER.debug("snapmaker FilamentOutSensor handle_coordinator_update: %s", self.coordinator._entry.title)
-        self.async_write_ha_state()
-
-    async def async_update(self):
-        _LOGGER.debug("snapmaker FilamentOutSensor async_update")
-        await self.coordinator.async_request_refresh()
-
-
-class HomedSensor(CoordinatorEntity, SensorEntity):
-    """Homed status of a Snapmaker printer."""
-    _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = ["true", "false"]
-    _attr_icon = "mdi:home"
-
-    def __init__(self, coordinator, printer):
-        super().__init__(coordinator, context=1)
-        self._printer = printer
-
-        self._attr_unique_id = f"{self._printer.device_id}_homed"
-        self._attr_name = f"{self._printer.name} Homed"
-
-    @property
-    def device_info(self):
-        return self.coordinator.device_info
-
-    @property
-    def available(self) -> bool:
-        return True
-
-    @property
-    def state(self):
-        _LOGGER.debug("snapmaker HomedSensor state")
-        value = self.coordinator.data["homed"]
-        if value is None:
-            return None
-        return "true" if value else "false"
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        _LOGGER.debug("snapmaker HomedSensor handle_coordinator_update: %s", self.coordinator._entry.title)
-        self.async_write_ha_state()
-
-    async def async_update(self):
-        _LOGGER.debug("snapmaker HomedSensor async_update")
         await self.coordinator.async_request_refresh()
 
 

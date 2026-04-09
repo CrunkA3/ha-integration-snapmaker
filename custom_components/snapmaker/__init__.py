@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 #PLATFORMS: list[str] = ["device_tracker", "sensor"]
-PLATFORMS: list[str] = [ "sensor" ]
+PLATFORMS: list[str] = [ "sensor", "binary_sensor" ]
 
 
 #def setup(hass: HomeAssistant, config: ConfigType) -> bool:
