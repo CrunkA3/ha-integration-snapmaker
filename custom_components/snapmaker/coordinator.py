@@ -7,10 +7,7 @@ import logging
 import socket
 import requests
 import time
-import async_timeout
 
-from homeassistant.components.light import LightEntity
-from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -18,7 +15,20 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN, MANUFACTURER
+from .const import (
+    DOMAIN,
+    MANUFACTURER,
+    CONF_TOKEN,
+    CONF_IP,
+    UDP_PORT,
+    UDP_BUFFER_SIZE,
+    UDP_MSG,
+    UDP_TIMEOUT,
+    API_PORT,
+    API_CONNECT_PATH,
+    API_STATUS_PATH,
+    API_DISCONNECT_PATH,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,12 +41,6 @@ class SnapmakerCoordinator(DataUpdateCoordinator):
         async_added_to_hass
         available
     """
-
-    sockTimeout = 3.0
-    bufferSize = 1024
-    msg = b'discover'
-    destPort = 20054
-    smToken = "45992cd3-84f0-4995-b5bd-7f47948fff4c"
 
     def __init__(self, hass, entry):
         """Initialize coordinator."""
@@ -54,11 +58,14 @@ class SnapmakerCoordinator(DataUpdateCoordinator):
         self._hass = hass
         self._entry = entry
 
+        # Token is stored in the config entry; read it on startup.
+        self._token = entry.data.get(CONF_TOKEN, "")
+
         hass.data.setdefault(DOMAIN, {})
         hass.data[DOMAIN].setdefault(entry.entry_id, {
                     "name": entry.title,
-                    "ip": "",
-                    "model": "",
+                    "ip": entry.data.get(CONF_IP, ""),
+                    "model": entry.data.get("model", ""),
                     "status": "OFFLINE"
                 })
 
@@ -123,10 +130,10 @@ class SnapmakerCoordinator(DataUpdateCoordinator):
         try:
             UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
             UDPClientSocket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            UDPClientSocket.settimeout(self.sockTimeout)
+            UDPClientSocket.settimeout(UDP_TIMEOUT)
 
-            UDPClientSocket.sendto(self.msg, ("255.255.255.255", self.destPort))
-            reply, server_address_info = UDPClientSocket.recvfrom(self.bufferSize)
+            UDPClientSocket.sendto(UDP_MSG, ("255.255.255.255", UDP_PORT))
+            reply, server_address_info = UDPClientSocket.recvfrom(UDP_BUFFER_SIZE)
             
             elements = reply.decode('ASCII').split('|')
 
@@ -147,7 +154,13 @@ class SnapmakerCoordinator(DataUpdateCoordinator):
             self._retry_count = 0
 
             if printer_status == "RUNNING":
-                apiResult = await self._hass.async_add_executor_job(self._call_snapmaker_api)
+                new_token = await self._hass.async_add_executor_job(self._call_snapmaker_api)
+                if new_token and new_token != self._token:
+                    self._token = new_token
+                    self._hass.config_entries.async_update_entry(
+                        self._entry,
+                        data={**self._entry.data, CONF_TOKEN: new_token},
+                    )
             else:
                 self.data["toolHead"] = None
                 self.data["nozzleTargetTemperature1"] = None
@@ -162,9 +175,6 @@ class SnapmakerCoordinator(DataUpdateCoordinator):
 
             return self.data
 
-            #devices = list(deviceInfo)
-            #self.last_results[printer_name] = deviceInfo
-
         except socket.timeout as ex:
             if self._retry_count >= 3:
                 self.data["status"] = "OFFLINE"
@@ -176,33 +186,41 @@ class SnapmakerCoordinator(DataUpdateCoordinator):
         except Exception as ex:
             raise UpdateFailed(f"Error communicating with socket: {ex}")
 
-    def _call_snapmaker_api(self) -> bool:
+    def _call_snapmaker_api(self) -> str | None:
+        """Call the Snapmaker API. Returns the refreshed token, or None on failure."""
         try:
-            self._connect()
+            token = self._connect()
             time.sleep(1)
-            self._get_status()
+            self._get_status(token)
             time.sleep(1)
-            self._disconnect()
-            return True
+            self._disconnect(token)
+            return token
         except Exception as ex:
-            _LOGGER.info("Fehler beim lesen der Schnittstelle: %s", ex)
-            return False
+            _LOGGER.info("Error reading interface: %s", ex)
+            return None
 
-    def _connect(self):
-        token = self.smToken
-        requestUri = 'http://' + self.data["ip"] + ':8080/api/v1/connect' + ( '' if token == ''  else ('?token=' + token))
+    def _connect(self) -> str:
+        """POST to the connect endpoint and return the token from the response."""
+        token = self._token
+        requestUri = (
+            f"http://{self.data['ip']}:{API_PORT}{API_CONNECT_PATH}"
+            + ("" if not token else f"?token={token}")
+        )
         response = requests.post(requestUri)
         _LOGGER.debug(response.content)
-        self.smToken = response.json()['token']
+        return response.json()["token"]
 
-    def _disconnect(self):
-        token = self.smToken
-        requestUri = 'http://' + self.data["ip"] + ':8080/api/v1/disconnect' + ( '' if token == ''  else ('?token=' + token))
-        response = requests.post(requestUri)
+    def _disconnect(self, token: str):
+        """POST to the disconnect endpoint."""
+        requestUri = (
+            f"http://{self.data['ip']}:{API_PORT}{API_DISCONNECT_PATH}"
+            + ("" if not token else f"?token={token}")
+        )
+        requests.post(requestUri)
 
-    def _get_status(self):
-        token = self.smToken
-        requestUri = 'http://' + self.data["ip"] + ':8080/api/v1/status?token=' + token
+    def _get_status(self, token: str):
+        """GET the printer status and update coordinator data."""
+        requestUri = f"http://{self.data['ip']}:{API_PORT}{API_STATUS_PATH}?token={token}"
         response = requests.get(requestUri)
         
         responseJson = response.json()
@@ -221,10 +239,3 @@ class SnapmakerCoordinator(DataUpdateCoordinator):
         self.data["heatedBedTargetTemperature"] = responseJson.get("heatedBedTargetTemperature")
         self.data["heatedBedTemperature"] = responseJson.get("heatedBedTemperature")
         self.data["fileName"] = responseJson.get("fileName")
-        #snapmaker = {
-        #    "total_lines": responseJson['totalLines'],
-        #    "current_line": responseJson['currentLine'],
-        #    "progress": responseJson['progress'],
-        #    "elapsed_time": responseJson['elapsedTime'],
-        #    "remaining_time": responseJson['remainingTime'],
-        #}
