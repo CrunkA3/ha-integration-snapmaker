@@ -68,6 +68,26 @@ class SnapmakerCoordinator(DataUpdateCoordinator):
             hass.data[DOMAIN][entry.entry_id]["elapsedTime"] = 0
         if "remainingTime" not in hass.data[DOMAIN][entry.entry_id]:
             hass.data[DOMAIN][entry.entry_id]["remainingTime"] = 0
+        if "toolHead" not in hass.data[DOMAIN][entry.entry_id]:
+            hass.data[DOMAIN][entry.entry_id]["toolHead"] = None
+        if "nozzleTargetTemperature1" not in hass.data[DOMAIN][entry.entry_id]:
+            hass.data[DOMAIN][entry.entry_id]["nozzleTargetTemperature1"] = None
+        if "nozzleTargetTemperature2" not in hass.data[DOMAIN][entry.entry_id]:
+            hass.data[DOMAIN][entry.entry_id]["nozzleTargetTemperature2"] = None
+        if "nozzleTemperature1" not in hass.data[DOMAIN][entry.entry_id]:
+            hass.data[DOMAIN][entry.entry_id]["nozzleTemperature1"] = None
+        if "nozzleTemperature2" not in hass.data[DOMAIN][entry.entry_id]:
+            hass.data[DOMAIN][entry.entry_id]["nozzleTemperature2"] = None
+        if "isFilamentOut" not in hass.data[DOMAIN][entry.entry_id]:
+            hass.data[DOMAIN][entry.entry_id]["isFilamentOut"] = None
+        if "homed" not in hass.data[DOMAIN][entry.entry_id]:
+            hass.data[DOMAIN][entry.entry_id]["homed"] = None
+        if "heatedBedTargetTemperature" not in hass.data[DOMAIN][entry.entry_id]:
+            hass.data[DOMAIN][entry.entry_id]["heatedBedTargetTemperature"] = None
+        if "heatedBedTemperature" not in hass.data[DOMAIN][entry.entry_id]:
+            hass.data[DOMAIN][entry.entry_id]["heatedBedTemperature"] = None
+        if "fileName" not in hass.data[DOMAIN][entry.entry_id]:
+            hass.data[DOMAIN][entry.entry_id]["fileName"] = None
 
         _LOGGER.info("SnapmakerCoordinator initialized: %s", self.data)
 
@@ -128,7 +148,18 @@ class SnapmakerCoordinator(DataUpdateCoordinator):
 
             if printer_status == "RUNNING":
                 apiResult = await self._hass.async_add_executor_job(self._call_snapmaker_api)
-            
+            else:
+                self.data["toolHead"] = None
+                self.data["nozzleTargetTemperature1"] = None
+                self.data["nozzleTargetTemperature2"] = None
+                self.data["nozzleTemperature1"] = None
+                self.data["nozzleTemperature2"] = None
+                self.data["isFilamentOut"] = None
+                self.data["homed"] = None
+                self.data["heatedBedTargetTemperature"] = None
+                self.data["heatedBedTemperature"] = None
+                self.data["fileName"] = None
+
             return self.data
 
             #devices = list(deviceInfo)
@@ -180,6 +211,16 @@ class SnapmakerCoordinator(DataUpdateCoordinator):
         self.data["progress"] = responseJson["progress"]
         self.data["elapsedTime"] = responseJson["elapsedTime"]
         self.data["remainingTime"] = responseJson["remainingTime"]
+        self.data["toolHead"] = responseJson.get("toolHead")
+        self.data["nozzleTargetTemperature1"] = responseJson.get("nozzleTargetTemperature1")
+        self.data["nozzleTargetTemperature2"] = responseJson.get("nozzleTargetTemperature2")
+        self.data["nozzleTemperature1"] = responseJson.get("nozzleTemperature1")
+        self.data["nozzleTemperature2"] = responseJson.get("nozzleTemperature2")
+        self.data["isFilamentOut"] = responseJson.get("isFilamentOut")
+        self.data["homed"] = responseJson.get("homed")
+        self.data["heatedBedTargetTemperature"] = responseJson.get("heatedBedTargetTemperature")
+        self.data["heatedBedTemperature"] = responseJson.get("heatedBedTemperature")
+        self.data["fileName"] = responseJson.get("fileName")
         #snapmaker = {
         #    "total_lines": responseJson['totalLines'],
         #    "current_line": responseJson['currentLine'],
