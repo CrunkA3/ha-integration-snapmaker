@@ -38,7 +38,7 @@ The integration discovers your Snapmaker printer on the local network via UDP br
 | **Filament Out** | `On` when filament runout is detected |
 | **Homed** | `On` when the printer has been homed |
 
-> Temperature and print-specific sensors are only **available** while the printer is actively printing (`RUNNING`).
+> The **Tool Head**, **temperature sensors**, **File Name**, and the **binary sensors** are only **available** while the printer is actively printing (`RUNNING`).
 
 ---
 
@@ -82,7 +82,7 @@ The integration will begin discovering your printer automatically via UDP broadc
 
 1. **Discovery** – Every 30 seconds the integration sends a UDP broadcast (`discover`) to port `20054`. The printer responds with its name, IP address, model, and current status.
 2. **API polling** – When the printer status is `RUNNING`, the integration connects to the Snapmaker HTTP API (`http://<printer_ip>:8080/api/v1/`) to retrieve detailed print status including temperatures, progress, elapsed/remaining time, and more.
-3. **Offline detection** – If the printer does not respond to three consecutive discovery attempts, its status is set to `OFFLINE`.
+3. **Offline detection** – If the printer does not respond to four consecutive discovery attempts, its status is set to `OFFLINE`.
 
 ---
 
