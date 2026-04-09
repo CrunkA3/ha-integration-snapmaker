@@ -37,7 +37,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
         IpSensor(coordinator, printer),
         ProgressSensor(coordinator, printer),
         ElapsedTimeSensor(coordinator, printer),
-        RemainingTimeSensor(coordinator, printer)
+        RemainingTimeSensor(coordinator, printer),
+        ToolHeadSensor(coordinator, printer),
+        NozzleTargetTemperature1Sensor(coordinator, printer),
+        NozzleTargetTemperature2Sensor(coordinator, printer),
+        NozzleTemperature1Sensor(coordinator, printer),
+        NozzleTemperature2Sensor(coordinator, printer),
+        FilamentOutSensor(coordinator, printer),
+        HomedSensor(coordinator, printer),
+        HeatedBedTargetTemperatureSensor(coordinator, printer),
+        HeatedBedTemperatureSensor(coordinator, printer),
+        FileNameSensor(coordinator, printer),
         ])
 
 
@@ -283,4 +293,374 @@ class RemainingTimeSensor(CoordinatorEntity, SensorEntity):
         """Synchronize state"""
         #self._attr_native_value  = "OFFLINE"
         _LOGGER.debug("snapmaker RemainingTimeSensor async_update")
+        await self.coordinator.async_request_refresh()
+
+
+class ToolHeadSensor(CoordinatorEntity, SensorEntity):
+    """Tool head of a Snapmaker printer."""
+    _attr_device_class = None
+    _attr_icon = "mdi:printer-3d-nozzle"
+
+    def __init__(self, coordinator, printer):
+        super().__init__(coordinator, context=1)
+        self._printer = printer
+
+        self._attr_unique_id = f"{self._printer.device_id}_tool_head"
+        self._attr_name = f"{self._printer.name} Tool Head"
+
+    @property
+    def device_info(self):
+        return self.coordinator.device_info
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def state(self):
+        _LOGGER.debug("snapmaker ToolHeadSensor state")
+        return self.coordinator.data["toolHead"]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        _LOGGER.debug("snapmaker ToolHeadSensor handle_coordinator_update: %s", self.coordinator._entry.title)
+        self.async_write_ha_state()
+
+    async def async_update(self):
+        _LOGGER.debug("snapmaker ToolHeadSensor async_update")
+        await self.coordinator.async_request_refresh()
+
+
+class NozzleTargetTemperature1Sensor(CoordinatorEntity, SensorEntity):
+    """Nozzle 1 target temperature of a Snapmaker printer."""
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = "°C"
+    _attr_suggested_display_precision = 0
+
+    def __init__(self, coordinator, printer):
+        super().__init__(coordinator, context=1)
+        self._printer = printer
+
+        self._attr_unique_id = f"{self._printer.device_id}_nozzle_target_temperature_1"
+        self._attr_name = f"{self._printer.name} Nozzle Target Temperature 1"
+
+    @property
+    def device_info(self):
+        return self.coordinator.device_info
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def state(self):
+        _LOGGER.debug("snapmaker NozzleTargetTemperature1Sensor state")
+        return self.coordinator.data["nozzleTargetTemperature1"]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        _LOGGER.debug("snapmaker NozzleTargetTemperature1Sensor handle_coordinator_update: %s", self.coordinator._entry.title)
+        self.async_write_ha_state()
+
+    async def async_update(self):
+        _LOGGER.debug("snapmaker NozzleTargetTemperature1Sensor async_update")
+        await self.coordinator.async_request_refresh()
+
+
+class NozzleTargetTemperature2Sensor(CoordinatorEntity, SensorEntity):
+    """Nozzle 2 target temperature of a Snapmaker printer."""
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = "°C"
+    _attr_suggested_display_precision = 0
+
+    def __init__(self, coordinator, printer):
+        super().__init__(coordinator, context=1)
+        self._printer = printer
+
+        self._attr_unique_id = f"{self._printer.device_id}_nozzle_target_temperature_2"
+        self._attr_name = f"{self._printer.name} Nozzle Target Temperature 2"
+
+    @property
+    def device_info(self):
+        return self.coordinator.device_info
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def state(self):
+        _LOGGER.debug("snapmaker NozzleTargetTemperature2Sensor state")
+        return self.coordinator.data["nozzleTargetTemperature2"]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        _LOGGER.debug("snapmaker NozzleTargetTemperature2Sensor handle_coordinator_update: %s", self.coordinator._entry.title)
+        self.async_write_ha_state()
+
+    async def async_update(self):
+        _LOGGER.debug("snapmaker NozzleTargetTemperature2Sensor async_update")
+        await self.coordinator.async_request_refresh()
+
+
+class NozzleTemperature1Sensor(CoordinatorEntity, SensorEntity):
+    """Nozzle 1 temperature of a Snapmaker printer."""
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = "°C"
+    _attr_suggested_display_precision = 0
+
+    def __init__(self, coordinator, printer):
+        super().__init__(coordinator, context=1)
+        self._printer = printer
+
+        self._attr_unique_id = f"{self._printer.device_id}_nozzle_temperature_1"
+        self._attr_name = f"{self._printer.name} Nozzle Temperature 1"
+
+    @property
+    def device_info(self):
+        return self.coordinator.device_info
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def state(self):
+        _LOGGER.debug("snapmaker NozzleTemperature1Sensor state")
+        return self.coordinator.data["nozzleTemperature1"]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        _LOGGER.debug("snapmaker NozzleTemperature1Sensor handle_coordinator_update: %s", self.coordinator._entry.title)
+        self.async_write_ha_state()
+
+    async def async_update(self):
+        _LOGGER.debug("snapmaker NozzleTemperature1Sensor async_update")
+        await self.coordinator.async_request_refresh()
+
+
+class NozzleTemperature2Sensor(CoordinatorEntity, SensorEntity):
+    """Nozzle 2 temperature of a Snapmaker printer."""
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = "°C"
+    _attr_suggested_display_precision = 0
+
+    def __init__(self, coordinator, printer):
+        super().__init__(coordinator, context=1)
+        self._printer = printer
+
+        self._attr_unique_id = f"{self._printer.device_id}_nozzle_temperature_2"
+        self._attr_name = f"{self._printer.name} Nozzle Temperature 2"
+
+    @property
+    def device_info(self):
+        return self.coordinator.device_info
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def state(self):
+        _LOGGER.debug("snapmaker NozzleTemperature2Sensor state")
+        return self.coordinator.data["nozzleTemperature2"]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        _LOGGER.debug("snapmaker NozzleTemperature2Sensor handle_coordinator_update: %s", self.coordinator._entry.title)
+        self.async_write_ha_state()
+
+    async def async_update(self):
+        _LOGGER.debug("snapmaker NozzleTemperature2Sensor async_update")
+        await self.coordinator.async_request_refresh()
+
+
+class FilamentOutSensor(CoordinatorEntity, SensorEntity):
+    """Filament out status of a Snapmaker printer."""
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["true", "false"]
+    _attr_icon = "mdi:printer-3d-nozzle-alert"
+
+    def __init__(self, coordinator, printer):
+        super().__init__(coordinator, context=1)
+        self._printer = printer
+
+        self._attr_unique_id = f"{self._printer.device_id}_filament_out"
+        self._attr_name = f"{self._printer.name} Filament Out"
+
+    @property
+    def device_info(self):
+        return self.coordinator.device_info
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def state(self):
+        _LOGGER.debug("snapmaker FilamentOutSensor state")
+        value = self.coordinator.data["isFilamentOut"]
+        if value is None:
+            return None
+        return "true" if value else "false"
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        _LOGGER.debug("snapmaker FilamentOutSensor handle_coordinator_update: %s", self.coordinator._entry.title)
+        self.async_write_ha_state()
+
+    async def async_update(self):
+        _LOGGER.debug("snapmaker FilamentOutSensor async_update")
+        await self.coordinator.async_request_refresh()
+
+
+class HomedSensor(CoordinatorEntity, SensorEntity):
+    """Homed status of a Snapmaker printer."""
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["true", "false"]
+    _attr_icon = "mdi:home"
+
+    def __init__(self, coordinator, printer):
+        super().__init__(coordinator, context=1)
+        self._printer = printer
+
+        self._attr_unique_id = f"{self._printer.device_id}_homed"
+        self._attr_name = f"{self._printer.name} Homed"
+
+    @property
+    def device_info(self):
+        return self.coordinator.device_info
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def state(self):
+        _LOGGER.debug("snapmaker HomedSensor state")
+        value = self.coordinator.data["homed"]
+        if value is None:
+            return None
+        return "true" if value else "false"
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        _LOGGER.debug("snapmaker HomedSensor handle_coordinator_update: %s", self.coordinator._entry.title)
+        self.async_write_ha_state()
+
+    async def async_update(self):
+        _LOGGER.debug("snapmaker HomedSensor async_update")
+        await self.coordinator.async_request_refresh()
+
+
+class HeatedBedTargetTemperatureSensor(CoordinatorEntity, SensorEntity):
+    """Heated bed target temperature of a Snapmaker printer."""
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = "°C"
+    _attr_suggested_display_precision = 0
+
+    def __init__(self, coordinator, printer):
+        super().__init__(coordinator, context=1)
+        self._printer = printer
+
+        self._attr_unique_id = f"{self._printer.device_id}_heated_bed_target_temperature"
+        self._attr_name = f"{self._printer.name} Heated Bed Target Temperature"
+
+    @property
+    def device_info(self):
+        return self.coordinator.device_info
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def state(self):
+        _LOGGER.debug("snapmaker HeatedBedTargetTemperatureSensor state")
+        return self.coordinator.data["heatedBedTargetTemperature"]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        _LOGGER.debug("snapmaker HeatedBedTargetTemperatureSensor handle_coordinator_update: %s", self.coordinator._entry.title)
+        self.async_write_ha_state()
+
+    async def async_update(self):
+        _LOGGER.debug("snapmaker HeatedBedTargetTemperatureSensor async_update")
+        await self.coordinator.async_request_refresh()
+
+
+class HeatedBedTemperatureSensor(CoordinatorEntity, SensorEntity):
+    """Heated bed temperature of a Snapmaker printer."""
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = "°C"
+    _attr_suggested_display_precision = 0
+
+    def __init__(self, coordinator, printer):
+        super().__init__(coordinator, context=1)
+        self._printer = printer
+
+        self._attr_unique_id = f"{self._printer.device_id}_heated_bed_temperature"
+        self._attr_name = f"{self._printer.name} Heated Bed Temperature"
+
+    @property
+    def device_info(self):
+        return self.coordinator.device_info
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def state(self):
+        _LOGGER.debug("snapmaker HeatedBedTemperatureSensor state")
+        return self.coordinator.data["heatedBedTemperature"]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        _LOGGER.debug("snapmaker HeatedBedTemperatureSensor handle_coordinator_update: %s", self.coordinator._entry.title)
+        self.async_write_ha_state()
+
+    async def async_update(self):
+        _LOGGER.debug("snapmaker HeatedBedTemperatureSensor async_update")
+        await self.coordinator.async_request_refresh()
+
+
+class FileNameSensor(CoordinatorEntity, SensorEntity):
+    """File name of the current print on a Snapmaker printer."""
+    _attr_device_class = None
+    _attr_icon = "mdi:file"
+
+    def __init__(self, coordinator, printer):
+        super().__init__(coordinator, context=1)
+        self._printer = printer
+
+        self._attr_unique_id = f"{self._printer.device_id}_file_name"
+        self._attr_name = f"{self._printer.name} File Name"
+
+    @property
+    def device_info(self):
+        return self.coordinator.device_info
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def state(self):
+        _LOGGER.debug("snapmaker FileNameSensor state")
+        return self.coordinator.data["fileName"]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        _LOGGER.debug("snapmaker FileNameSensor handle_coordinator_update: %s", self.coordinator._entry.title)
+        self.async_write_ha_state()
+
+    async def async_update(self):
+        _LOGGER.debug("snapmaker FileNameSensor async_update")
         await self.coordinator.async_request_refresh()
