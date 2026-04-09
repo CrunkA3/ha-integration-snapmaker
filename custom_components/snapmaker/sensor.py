@@ -312,11 +312,11 @@ class ToolHeadSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.coordinator.last_update_success and self.coordinator.data["status"] == "RUNNING"
 
     @property
-    def state(self):
-        _LOGGER.debug("snapmaker ToolHeadSensor state")
+    def native_value(self):
+        _LOGGER.debug("snapmaker ToolHeadSensor native_value")
         return self.coordinator.data["toolHead"]
 
     @callback
@@ -349,11 +349,11 @@ class NozzleTargetTemperature1Sensor(CoordinatorEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.coordinator.last_update_success and self.coordinator.data["status"] == "RUNNING"
 
     @property
-    def state(self):
-        _LOGGER.debug("snapmaker NozzleTargetTemperature1Sensor state")
+    def native_value(self):
+        _LOGGER.debug("snapmaker NozzleTargetTemperature1Sensor native_value")
         return self.coordinator.data["nozzleTargetTemperature1"]
 
     @callback
@@ -386,11 +386,11 @@ class NozzleTargetTemperature2Sensor(CoordinatorEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.coordinator.last_update_success and self.coordinator.data["status"] == "RUNNING"
 
     @property
-    def state(self):
-        _LOGGER.debug("snapmaker NozzleTargetTemperature2Sensor state")
+    def native_value(self):
+        _LOGGER.debug("snapmaker NozzleTargetTemperature2Sensor native_value")
         return self.coordinator.data["nozzleTargetTemperature2"]
 
     @callback
@@ -423,11 +423,11 @@ class NozzleTemperature1Sensor(CoordinatorEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.coordinator.last_update_success and self.coordinator.data["status"] == "RUNNING"
 
     @property
-    def state(self):
-        _LOGGER.debug("snapmaker NozzleTemperature1Sensor state")
+    def native_value(self):
+        _LOGGER.debug("snapmaker NozzleTemperature1Sensor native_value")
         return self.coordinator.data["nozzleTemperature1"]
 
     @callback
@@ -460,11 +460,11 @@ class NozzleTemperature2Sensor(CoordinatorEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.coordinator.last_update_success and self.coordinator.data["status"] == "RUNNING"
 
     @property
-    def state(self):
-        _LOGGER.debug("snapmaker NozzleTemperature2Sensor state")
+    def native_value(self):
+        _LOGGER.debug("snapmaker NozzleTemperature2Sensor native_value")
         return self.coordinator.data["nozzleTemperature2"]
 
     @callback
@@ -497,11 +497,11 @@ class HeatedBedTargetTemperatureSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.coordinator.last_update_success and self.coordinator.data["status"] == "RUNNING"
 
     @property
-    def state(self):
-        _LOGGER.debug("snapmaker HeatedBedTargetTemperatureSensor state")
+    def native_value(self):
+        _LOGGER.debug("snapmaker HeatedBedTargetTemperatureSensor native_value")
         return self.coordinator.data["heatedBedTargetTemperature"]
 
     @callback
@@ -534,11 +534,11 @@ class HeatedBedTemperatureSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.coordinator.last_update_success and self.coordinator.data["status"] == "RUNNING"
 
     @property
-    def state(self):
-        _LOGGER.debug("snapmaker HeatedBedTemperatureSensor state")
+    def native_value(self):
+        _LOGGER.debug("snapmaker HeatedBedTemperatureSensor native_value")
         return self.coordinator.data["heatedBedTemperature"]
 
     @callback
@@ -569,11 +569,11 @@ class FileNameSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.coordinator.last_update_success and self.coordinator.data["status"] == "RUNNING"
 
     @property
-    def state(self):
-        _LOGGER.debug("snapmaker FileNameSensor state")
+    def native_value(self):
+        _LOGGER.debug("snapmaker FileNameSensor native_value")
         return self.coordinator.data["fileName"]
 
     @callback

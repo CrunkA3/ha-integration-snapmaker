@@ -50,7 +50,7 @@ class FilamentOutSensor(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.coordinator.last_update_success and self.coordinator.data["status"] == "RUNNING"
 
     @property
     def is_on(self) -> bool | None:
@@ -85,7 +85,7 @@ class HomedSensor(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.coordinator.last_update_success and self.coordinator.data["status"] == "RUNNING"
 
     @property
     def is_on(self) -> bool | None:

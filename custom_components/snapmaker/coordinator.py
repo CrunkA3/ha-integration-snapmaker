@@ -148,7 +148,18 @@ class SnapmakerCoordinator(DataUpdateCoordinator):
 
             if printer_status == "RUNNING":
                 apiResult = await self._hass.async_add_executor_job(self._call_snapmaker_api)
-            
+            else:
+                self.data["toolHead"] = None
+                self.data["nozzleTargetTemperature1"] = None
+                self.data["nozzleTargetTemperature2"] = None
+                self.data["nozzleTemperature1"] = None
+                self.data["nozzleTemperature2"] = None
+                self.data["isFilamentOut"] = None
+                self.data["homed"] = None
+                self.data["heatedBedTargetTemperature"] = None
+                self.data["heatedBedTemperature"] = None
+                self.data["fileName"] = None
+
             return self.data
 
             #devices = list(deviceInfo)
