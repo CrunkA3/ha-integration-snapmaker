@@ -20,3 +20,7 @@ API_PORT = 8080
 API_CONNECT_PATH = "/api/v1/connect"
 API_STATUS_PATH = "/api/v1/status"
 API_DISCONNECT_PATH = "/api/v1/disconnect"
+HTTP_TIMEOUT = 10
+
+# Coordinator
+MAX_RETRY_COUNT = 3

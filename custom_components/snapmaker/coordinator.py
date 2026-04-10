@@ -8,7 +8,6 @@ import socket
 import requests
 import time
 
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -20,6 +19,7 @@ from .const import (
     MANUFACTURER,
     CONF_TOKEN,
     CONF_IP,
+    CONF_MODEL,
     UDP_PORT,
     UDP_BUFFER_SIZE,
     UDP_MSG,
@@ -28,6 +28,8 @@ from .const import (
     API_CONNECT_PATH,
     API_STATUS_PATH,
     API_DISCONNECT_PATH,
+    HTTP_TIMEOUT,
+    MAX_RETRY_COUNT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,7 +67,7 @@ class SnapmakerCoordinator(DataUpdateCoordinator):
         hass.data[DOMAIN].setdefault(entry.entry_id, {
                     "name": entry.title,
                     "ip": entry.data.get(CONF_IP, ""),
-                    "model": entry.data.get("model", ""),
+                    "model": entry.data.get(CONF_MODEL, ""),
                     "status": "OFFLINE"
                 })
 
@@ -128,63 +130,78 @@ class SnapmakerCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("SnapmakerCoordinator _async_update_data")
 
         try:
-            UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-            UDPClientSocket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            UDPClientSocket.settimeout(UDP_TIMEOUT)
+            discovered = await self._hass.async_add_executor_job(self._do_udp_discover)
+        except UpdateFailed:
+            raise
+        except Exception as ex:
+            raise UpdateFailed(f"Error communicating with socket: {ex}")
 
-            UDPClientSocket.sendto(UDP_MSG, ("255.255.255.255", UDP_PORT))
-            reply, server_address_info = UDPClientSocket.recvfrom(UDP_BUFFER_SIZE)
-            
-            elements = reply.decode('ASCII').split('|')
-
-            printer_name, printer_ip = (elements[0]).split('@')
-            model_key, printer_model = (elements[1]).split(':')
-            status_key, printer_status = (elements[2]).split(':')
-            
-            if self.data == None:
-                self.data = {}
-
-            
-            _LOGGER.debug("SnapmakerCoordinator got info for %s", printer_name)
-
-            self._hass.data[DOMAIN][self._entry.entry_id]["status"] = printer_status
-            self._hass.data[DOMAIN][self._entry.entry_id]["ip"] = printer_ip
-            self._hass.data[DOMAIN][self._entry.entry_id]["model"] = printer_model
-            
-            self._retry_count = 0
-
-            if printer_status == "RUNNING":
-                new_token = await self._hass.async_add_executor_job(self._call_snapmaker_api)
-                if new_token and new_token != self._token:
-                    self._token = new_token
-                    self._hass.config_entries.async_update_entry(
-                        self._entry,
-                        data={**self._entry.data, CONF_TOKEN: new_token},
-                    )
-            else:
-                self.data["toolHead"] = None
-                self.data["nozzleTargetTemperature1"] = None
-                self.data["nozzleTargetTemperature2"] = None
-                self.data["nozzleTemperature1"] = None
-                self.data["nozzleTemperature2"] = None
-                self.data["isFilamentOut"] = None
-                self.data["homed"] = None
-                self.data["heatedBedTargetTemperature"] = None
-                self.data["heatedBedTemperature"] = None
-                self.data["fileName"] = None
-
-            return self.data
-
-        except socket.timeout as ex:
-            if self._retry_count >= 3:
+        if discovered is None:
+            # Socket timed out – increment retry counter and mark offline after threshold
+            if self._retry_count >= MAX_RETRY_COUNT:
                 self.data["status"] = "OFFLINE"
                 self.data["progress"] = 0
                 self.data["elapsedTime"] = 0
-
             self._retry_count += 1
-            
-        except Exception as ex:
-            raise UpdateFailed(f"Error communicating with socket: {ex}")
+            return self.data
+
+        printer_name = discovered["name"]
+        printer_ip = discovered["ip"]
+        printer_model = discovered["model"]
+        printer_status = discovered["status"]
+
+        _LOGGER.debug("SnapmakerCoordinator got info for %s", printer_name)
+
+        self._hass.data[DOMAIN][self._entry.entry_id]["status"] = printer_status
+        self._hass.data[DOMAIN][self._entry.entry_id]["ip"] = printer_ip
+        self._hass.data[DOMAIN][self._entry.entry_id]["model"] = printer_model
+
+        self._retry_count = 0
+
+        if printer_status == "RUNNING":
+            new_token = await self._hass.async_add_executor_job(self._call_snapmaker_api)
+            if new_token and new_token != self._token:
+                self._token = new_token
+                self._hass.config_entries.async_update_entry(
+                    self._entry,
+                    data={**self._entry.data, CONF_TOKEN: new_token},
+                )
+        else:
+            self.data["toolHead"] = None
+            self.data["nozzleTargetTemperature1"] = None
+            self.data["nozzleTargetTemperature2"] = None
+            self.data["nozzleTemperature1"] = None
+            self.data["nozzleTemperature2"] = None
+            self.data["isFilamentOut"] = None
+            self.data["homed"] = None
+            self.data["heatedBedTargetTemperature"] = None
+            self.data["heatedBedTemperature"] = None
+            self.data["fileName"] = None
+
+        return self.data
+
+    def _do_udp_discover(self) -> dict | None:
+        """Blocking UDP broadcast. Returns printer info dict or None on timeout."""
+        sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        sock.settimeout(UDP_TIMEOUT)
+        try:
+            sock.sendto(UDP_MSG, ("255.255.255.255", UDP_PORT))
+            reply, _ = sock.recvfrom(UDP_BUFFER_SIZE)
+            elements = reply.decode("ASCII").split("|")
+            printer_name, printer_ip = elements[0].split("@")
+            _, printer_model = elements[1].split(":")
+            _, printer_status = elements[2].split(":")
+            return {
+                "name": printer_name,
+                "ip": printer_ip,
+                "model": printer_model,
+                "status": printer_status,
+            }
+        except socket.timeout:
+            return None
+        finally:
+            sock.close()
 
     def _call_snapmaker_api(self) -> str | None:
         """Call the Snapmaker API. Returns the refreshed token, or None on failure."""
@@ -206,9 +223,16 @@ class SnapmakerCoordinator(DataUpdateCoordinator):
             f"http://{self.data['ip']}:{API_PORT}{API_CONNECT_PATH}"
             + ("" if not token else f"?token={token}")
         )
-        response = requests.post(requestUri)
+        response = requests.post(requestUri, timeout=HTTP_TIMEOUT)
         _LOGGER.debug(response.content)
-        return response.json()["token"]
+        if response.status_code != 200:
+            raise UpdateFailed(
+                f"Connect returned HTTP {response.status_code}"
+            )
+        token_value = response.json().get("token")
+        if not token_value:
+            raise UpdateFailed("Connect response did not contain a token")
+        return token_value
 
     def _disconnect(self, token: str):
         """POST to the disconnect endpoint."""
@@ -216,13 +240,21 @@ class SnapmakerCoordinator(DataUpdateCoordinator):
             f"http://{self.data['ip']}:{API_PORT}{API_DISCONNECT_PATH}"
             + ("" if not token else f"?token={token}")
         )
-        requests.post(requestUri)
+        try:
+            requests.post(requestUri, timeout=HTTP_TIMEOUT)
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.warning("Disconnect request failed: %s", ex)
 
     def _get_status(self, token: str):
         """GET the printer status and update coordinator data."""
         requestUri = f"http://{self.data['ip']}:{API_PORT}{API_STATUS_PATH}?token={token}"
-        response = requests.get(requestUri)
-        
+        response = requests.get(requestUri, timeout=HTTP_TIMEOUT)
+
+        if response.status_code != 200:
+            raise UpdateFailed(
+                f"Status request returned HTTP {response.status_code}"
+            )
+
         responseJson = response.json()
         _LOGGER.debug("status api response: %s", responseJson)
 
