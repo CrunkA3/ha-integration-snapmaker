@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Snapmaker printer search",
+        "description": "Searching for Snapmaker printers on the local network via UDP broadcast. Click Submit to search again."
+      },
+      "confirm": {
+        "title": "Snapmaker printer found",
+        "description": "Found printer **{printer_name}** ({printer_model}) at {printer_ip}.\n\nPlease enter a name for this device.",
+        "data": {
+          "printer_name": "Device name"
+        }
+      },
+      "wait_for_approval": {
+        "title": "Approve access on printer",
+        "description": "A connection request has been sent to **{printer_name}**.\n\nPlease approve the access request on the printer's touch screen, then click Submit to check again."
+      }
+    },
+    "error": {
+      "no_printer_found": "No Snapmaker printer found on the local network. Make sure the printer is powered on and connected to the same network.",
+      "cannot_connect": "Failed to connect to the printer. Please try again."
+    },
+    "abort": {
+      "already_configured": "This printer is already configured.",
+      "no_printer_found": "No Snapmaker printer could be found."
+    }
+  }
+}
